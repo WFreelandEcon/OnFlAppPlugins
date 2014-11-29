@@ -21,8 +21,6 @@ sub write_tmp {
 }
 
 sub matches_context {
-	$HOME = $ENV{"HOME"};
-	$TEXT = $CONTEXT{'CTX_TEXT'};
 	$TEXT = trim ($TEXT);
 	
 	if (($TEXT =~ m/^SELECT.*FROM\s/si) || 
@@ -38,27 +36,19 @@ sub matches_context {
 		$TEXT =~ s/[^"]*?\s*\+\"//g;
 		$TEXT =~ s/\"//g;
 
-		$CONTEXT{'ACT_PATH'}=write_tmp ();
-		$CONTEXT{'ACT_LABEL'}="execute SQL " . substr ($TEXT, 0, 10);
-		return 1;
+		print ("ACT_PATH=" . write_tmp () . "\n");
+		print ("ACT_LABEL=execute SQL " . substr ($TEXT, 0, 10) . "\n");
+		exit 0;
 	}
 
-	return 0;
+	exit 1;
 }
 
-if ($ARGV[0] eq "--test") {
-	my $txtin = "";
-	while (<STDIN>) {
-		$txtin .= $_;
-	}
-
-	%CONTEXT = ();
-	$CONTEXT{'CTX_TEXT'} = $txtin;
-
-	my $rv = matches_context ();
-	if ($rv) {
-		foreach (keys (%CONTEXT)) {
-			print ($_ . "=" . $CONTEXT{$_} . "\n");
-		}
-	}
+my $txtin = "";
+while (<STDIN>) {
+	$txtin .= $_;
 }
+
+$TEXT = $txtin;
+
+matches_context();

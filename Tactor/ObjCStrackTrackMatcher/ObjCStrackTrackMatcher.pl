@@ -35,7 +35,6 @@ sub grep_mfile {
 }
 
 sub matches_context {
-	$TEXT = $CONTEXT{'CTX_TEXT'};
 	foreach (split ('[\n;]', $TEXT)) {
 		$l = $_;
 		print ("$_\n");
@@ -44,30 +43,21 @@ sub matches_context {
 			if ($fl ne "") {
 				$l = grep_mfile($fl, $2);
 				if ($l ne "") {
-					$CONTEXT{'ACT_PATH_LINE'} = $l;
-					$CONTEXT{'ACT_PATH'} = $fl;
-					return 1
-				};
+					print ("ACT_PATH_LINE=$l\n");
+					print ("ACT_PATH=$fl\n");
+					exit 0;
+				}
 			}
 		}
-
 	}
-	return 0;
+	exit 1;
 }
 
-if ($ARGV[0] eq "--test") {
-	my $txtin = "";
-	while (<STDIN>) {
-		$txtin .= $_;
-	}
-
-	%CONTEXT = ();
-	$CONTEXT{'CTX_TEXT'} = $txtin;
-
-	my $rv = matches_context ();
-	if ($rv) {
-		foreach (keys (%CONTEXT)) {
-			print ($_ . "=" . $CONTEXT{$_} . "\n");
-		}
-	}
+my $txtin = "";
+while (<STDIN>) {
+	$txtin .= $_;
 }
+
+$TEXT = $txtin;
+
+matches_context ();

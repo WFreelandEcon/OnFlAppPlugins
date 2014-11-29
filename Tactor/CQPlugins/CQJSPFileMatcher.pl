@@ -31,7 +31,7 @@ sub getprefix {
 }
 
 sub getfile {
-	$BASEURL= baseurl ($CONTEXT{'CTX_URL'});
+	$BASEURL= baseurl ($ENV{'CTX_URL'});
 	$BASEPATH="/var/classes/" . getprefix();
 	my ($file) = @_;
 	my $out = "/tmp/$$-" . basename ($file);
@@ -39,44 +39,35 @@ sub getfile {
 	print ("$cmd\n");
 	system ("$cmd");
 
-	$CONTEXT{'ACT_PATH'} = $out;
+	print ("ACT_PATH=$out\n");
 }
 
 sub matches_context {
-	$TEXT = $CONTEXT{'CTX_TEXT'};
 	foreach (split ('[\n;]', $TEXT)) {
 		$l = $_;
 		if ($l =~ m/([a-z][a-zA-Z0-9_\.\$]+)\(([A-Za-z0-9_]+_jsp\.java):(\d+)\)/) {
-			$CONTEXT{'ACT_PATH_LINE'} = $3;
+			print ("ACT_PATH_LINE=$3\n");
 			my @cl = split ('\.', "$1"); pop (@cl); pop (@cl);
 			my $f = join ('/', @cl) . "/" . $2;
 			getfile ($f);
-			return 1;
+			exit 0;
 		}
 		elsif ($l =~ m/line: (\d+) in the jsp file: (.*?\.jsp)/) {
-			$CONTEXT{'ACT_PATH_LINE'} = $1;
-			$CONTEXT{'ACT_SEARCH_FILE'} = $2;
-			$CONTEXT{'ACT_SEARCH_SCOPE'} = $ENV{'HOME'};			
-			return 1;
+			print ("ACT_PATH_LINE=$1\n");
+			print ("ACT_SEARCH_FILE=$2\n");
+			print ("ACT_SEARCH_SCOPE=" . $ENV{'HOME'} . "\n");			
+			exit 0;
 		}
 	}
-	return 0;
+	exit 1;
 }
 
-if ($ARGV[0] eq "--test") {
-	my $txtin = "";
+my $txtin = "";
 
-	while (<STDIN>) {
-		$txtin .= $_;
-	}
-
-	%CONTEXT = ();
-	$CONTEXT{'CTX_TEXT'} = $txtin;
-
-	my $rv = matches_context ();
-	if ($rv) {
-		foreach (keys (%CONTEXT)) {
-			print ($_ . "=" . $CONTEXT{$_} . "\n");
-		}
-	}
+while (<STDIN>) {
+	$txtin .= $_;
 }
+
+$TEXT = $txtin;
+
+matches_context ();
